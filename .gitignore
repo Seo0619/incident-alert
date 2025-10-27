@@ -1,0 +1,36 @@
+# Python venv / cache
+.venv/
+venv/
+env/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.egg-info/
+.eggs/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Secrets / local runtime data
+.env
+*.env
+
+# Local DB
+incident.db
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+*.egg
+.scratch/

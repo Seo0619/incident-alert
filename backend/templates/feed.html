@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Reports</h2>
+
+<div class="space-y-4">
+  {% for post in posts %}
+  <article class="bg-white rounded-xl shadow p-4 text-sm text-slate-800">
+    <div class="whitespace-pre-line mb-2">{{ post.text }}</div>
+    <div class="text-xs text-slate-500 flex flex-col">
+      <span>Time: {{ post.created_at }}</span>
+      <span>Processed by LLM?: {{ "yes" if post.processed else "no" }}</span>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if not posts %}
+<p class="text-slate-500 text-sm italic">No reports yet.</p>
+{% endif %}
+
+{% endblock %}

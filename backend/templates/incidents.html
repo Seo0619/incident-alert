@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="text-lg font-semibold text-slate-800 mb-4">Detected Incidents (High Confidence)</h2>
+
+<div class="space-y-4">
+  {% for inc in incidents %}
+  <article class="bg-white rounded-xl shadow p-4 text-sm text-slate-800">
+    <div class="mb-2 font-semibold text-red-600">
+      {{ inc.incident_type or "Unknown incident type" }}
+      (confidence: {{ inc.confidence }}%)
+    </div>
+
+    <div class="text-slate-800 whitespace-pre-line mb-2">
+      {{ inc.summary or "(no summary)" }}
+    </div>
+
+    <div class="text-xs text-slate-500 flex flex-col">
+      <span>Source post id: {{ inc.source_post_id }}</span>
+      <span>When detected: {{ inc.created_at }}</span>
+      {% if inc.location_country or inc.location_area %}
+        <span>Location guess:
+          {{ inc.location_country or "" }}
+          {{ inc.location_area or "" }}
+        </span>
+      {% else %}
+        <span>Location guess: (unknown)</span>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if not incidents %}
+<p class="text-slate-500 text-sm italic">No high-confidence incidents yet.</p>
+{% endif %}
+
+{% endblock %}
