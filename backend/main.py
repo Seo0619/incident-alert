@@ -9,6 +9,7 @@ import os
 from .database import SessionLocal, engine
 from . import models, schemas, crud
 from .models import Base   # ★ Base는 models에서만!
+from .worker import SCGWorker, WorkerConfig  # 👈 추가
 
 # 모델이 import된 상태에서 create_all
 Base.metadata.create_all(bind=engine)
@@ -27,23 +28,46 @@ def get_db():
     finally:
         db.close()
 
+
+app.state.worker = None
+
+@app.on_event("startup")
+def startup():
+    # 자동 시작 여부
+    if os.getenv("SCG_AUTOSTART", "0") == "1":
+        if not app.state.worker:
+            cfg = WorkerConfig()
+            app.state.worker = SCGWorker(cfg)
+            app.state.worker.start()
+            print("[scg] embedded worker started")
+
+@app.on_event("shutdown")
+def shutdown():
+    if app.state.worker:
+        app.state.worker.stop()
+
+
 # ----------------------------
 #  페이지 라우트
 # ----------------------------
-@app.get("/feed", response_class=HTMLResponse)
-def feed(request: Request, db: Session = Depends(get_db)):
-    posts = crud.get_recent_posts(db, limit=100)
-    return templates.TemplateResponse(
-        "feed.html", {"request": request, "posts": posts}
-    )
+@app.get("/feed")
+def feed(request: Request):
+    with SessionLocal() as db:
+        posts = db.query(models.UserPost).order_by(models.UserPost.id.desc()).limit(50).all()
+    return templates.TemplateResponse("feed.html", {"request": request, "posts": posts})
 
-@app.get("/report", response_class=HTMLResponse)
+@app.get("/report")
 def report_form(request: Request):
     return templates.TemplateResponse("report.html", {"request": request})
 
 @app.post("/report")
-def submit_report(text: str = Form(...), db: Session = Depends(get_db)):
-    crud.create_post(db, schemas.PostCreate(text=text, is_simulated=False))
+def submit_report(text: str = Form(...)):
+    with SessionLocal() as db:
+        post = crud.create_post(db, schemas.PostCreate(text=text, is_simulated=False))
+        seed_id = post.id
+    # 새 글이 들어오면 워커에 작업 enqueue
+    if app.state.worker:
+        app.state.worker.enqueue(seed_id)
     return RedirectResponse(url="/feed", status_code=303)
 
 # ----------------------------
