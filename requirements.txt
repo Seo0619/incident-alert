@@ -20,4 +20,3 @@ python-multipart
 pydantic>=2
 httpx
 openai>=1.40.0
-

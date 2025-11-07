@@ -50,6 +50,20 @@ def submit_report(text: str = Form(...), db: Session = Depends(get_db)):
 #  API (추가)
 # ----------------------------
 
+# 최신 '실제(비모의)' 글 1건을 돌려주는 고정 경로
+@app.get("/api/posts/latest_real")
+def get_latest_real_post(db: Session = Depends(get_db)):
+    post = (
+        db.query(models.UserPost)
+        .filter(models.UserPost.is_simulated == False)
+        .order_by(models.UserPost.created_at.desc())
+        .first()
+    )
+    if not post:
+        raise HTTPException(status_code=404, detail="No real posts yet")
+    return {"id": post.id, "text": post.text}
+
+
 # (A) 단건 조회: 워커가 씨앗 글 본문을 가져갈 때 사용
 @app.get("/api/posts/{post_id}")
 def api_get_post(post_id: int, db: Session = Depends(get_db)):
