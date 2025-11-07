@@ -1,22 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
+<h2>Recent Reports</h2>
 
-<h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Reports</h2>
+{% if posts|length == 0 %}
+  <p>No reports yet.</p>
+{% endif %}
 
-<div class="space-y-4">
-  {% for post in posts %}
-  <article class="bg-white rounded-xl shadow p-4 text-sm text-slate-800">
-    <div class="whitespace-pre-line mb-2">{{ post.text }}</div>
-    <div class="text-xs text-slate-500 flex flex-col">
-      <span>Time: {{ post.created_at }}</span>
-      <span>Processed by LLM?: {{ "yes" if post.processed else "no" }}</span>
+<div class="list">
+  {% for p in posts %}
+  <div class="card">
+    <div class="text">
+      {{ p.text }}
+      {% if p.is_simulated %}
+        <span class="badge simulated" title="내부 시뮬레이션">SIMULATED</span>
+      {% endif %}
     </div>
-  </article>
+    <div class="meta">
+      Time: {{ p.created_at }} ·
+      Processed by LLM?: {{ 'yes' if p.processed else 'no' }}
+      {% if p.persona %} · Persona: {{ p.persona }}{% endif %}
+      {% if p.lang %} · Lang: {{ p.lang }}{% endif %}
+      {% if p.hashtags %} · {{ p.hashtags }}{% endif %}
+    </div>
+  </div>
   {% endfor %}
 </div>
 
-{% if not posts %}
-<p class="text-slate-500 text-sm italic">No reports yet.</p>
-{% endif %}
-
+<style>
+.list{max-width:900px;margin:0 auto;}
+.card{border:1px solid #e4e4e7;border-radius:12px;padding:14px 16px;margin:10px 0;background:#fff}
+.text{font-size:15px;line-height:1.5}
+.meta{margin-top:6px;color:#666;font-size:12px}
+.badge{margin-left:8px;padding:2px 6px;border-radius:6px;font-size:11px;border:1px solid #bbb}
+.badge.simulated{background:#f6f6f6;color:#333;border-color:#d0d0d0}
+</style>
 {% endblock %}

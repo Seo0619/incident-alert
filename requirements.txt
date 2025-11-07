@@ -11,3 +11,13 @@ openai
 langchain
 langchain-openai
 langchain-core
+
+fastapi
+uvicorn
+jinja2
+sqlalchemy
+python-multipart
+pydantic>=2
+httpx
+openai>=1.40.0
+

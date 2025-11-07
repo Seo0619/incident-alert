@@ -1,30 +1,39 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, func
-from .database import Base
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, func
+from sqlalchemy.orm import declarative_base, relationship
+
+Base = declarative_base()
 
 class UserPost(Base):
     __tablename__ = "user_posts"
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    processed = Column(Boolean, nullable=False, server_default="0")
+    created_at = Column(DateTime, server_default=func.current_timestamp(), nullable=False)
+    processed = Column(Boolean, default=False, nullable=False)
 
+    # 시뮬레이션 메타
+    is_simulated = Column(Boolean, default=False, nullable=False)
+    persona = Column(String, nullable=True)
+    seed_post_id = Column(Integer, ForeignKey("user_posts.id"), nullable=True)
+    lang = Column(String, nullable=True)
+    hashtags = Column(String, nullable=True)
 
+    seed_post = relationship("UserPost", remote_side=[id], uselist=False)
+
+# ★ 추가: 확정 사건 테이블
 class ConfirmedIncident(Base):
     __tablename__ = "confirmed_incidents"
 
     id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("user_posts.id"), nullable=False)
 
-    # 어떤 신고(post)에서 나온 것인지 추적 가능하게 연결
-    source_post_id = Column(Integer, nullable=False)
+    incident_type = Column(String, nullable=True)
+    confidence = Column(Integer, nullable=False, default=0)
 
-    # LLM 판단 결과
-    incident_type = Column(String, nullable=True)         # 예: "explosion", "stabbing"
-    summary = Column(String, nullable=True)               # 짧은 요약 (사람이 읽을용)
-    confidence = Column(Integer, nullable=False)          # 0~100 정수
+    country = Column(String, nullable=True)
+    city_or_area = Column(String, nullable=True)
 
-    # 위치 정보 (아직 좌표는 안 쓰지만 LLM이 말한 장소 텍스트 정도는 저장 가능)
-    location_country = Column(String, nullable=True)      # 예: "South Korea"
-    location_area = Column(String, nullable=True)         # 예: "Gangnam Station area"
+    summary = Column(String, nullable=True)
+    created_at = Column(DateTime, server_default=func.current_timestamp(), nullable=False)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    post = relationship("UserPost")
